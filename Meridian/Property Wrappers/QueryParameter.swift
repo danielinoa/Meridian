@@ -7,6 +7,13 @@
 
 import Foundation
 
+//protocol OptionalType {
+//    associatedtype WrappedType
+//
+//    var optionalValue: WrappedType?
+//}
+
+
 public struct Present: Codable {
     public init() {
 
@@ -28,12 +35,18 @@ private struct Holder<Contained: Decodable>: Decodable {
 }
 
 @propertyWrapper
-public struct QueryParameter<Type: Decodable> {
+public struct QueryParameter<Type: Decodable>: PropertyWrapper {
 
-    let finalValue: Type?
+    @ParameterBox var finalValue: Type?
 
-    public init<Inner>(_ key: String) where Type == Inner? {
-        guard let queryItem = _currentRequest.queryParameters.first(where: { $0.name == key }) else {
+    let key: String
+
+    public init(_ key: String) {
+        self.key = key
+    }
+
+    func update<Inner>(_ requestContext: RequestContext, errors: inout [Error]) where Type == Inner? {
+        guard let queryItem = requestContext.queryParameters.first(where: { $0.name == key }) else {
             self.finalValue = .some(.none)
             return
         }
@@ -55,19 +68,19 @@ public struct QueryParameter<Type: Decodable> {
                     self.finalValue = try decoder.decode(Holder<Type>.self, from: newString.data(using: .utf8)!).value
                 } catch {
                     self.finalValue = nil
-                    _errors.append(QueryParameterDecodingError(type: Type.self, key: key))
+                    errors.append(QueryParameterDecodingError(type: Type.self, key: key))
                 }
             }
         } else {
             self.finalValue = nil
-            _errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
+            errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
         }
     }
 
     @_disfavoredOverload
-    public init(_ key: String) {
-        guard let queryItem = _currentRequest.queryParameters.first(where: { $0.name == key }) else {
-            _errors.append(MissingQueryParameterError(key: key))
+    func update(_ requestContext: RequestContext, errors: inout [Error]) {
+        guard let queryItem = requestContext.queryParameters.first(where: { $0.name == key }) else {
+            errors.append(MissingQueryParameterError(key: key))
             self.finalValue = nil
             return
         }
@@ -86,12 +99,12 @@ public struct QueryParameter<Type: Decodable> {
                     self.finalValue = try decoder.decode(Holder<Type>.self, from: newString.data(using: .utf8)!).value
                 } catch {
                     self.finalValue = nil
-                    _errors.append(QueryParameterDecodingError(type: Type.self, key: key))
+                    errors.append(QueryParameterDecodingError(type: Type.self, key: key))
                 }
             }
         } else {
             self.finalValue = nil
-            _errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
+            errors.append(NoValueQueryParameterError(key: key)) // this is maybe fatal
         }
     }
 

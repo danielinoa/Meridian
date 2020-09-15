@@ -81,9 +81,9 @@ struct EditTodo: Responder {
 
     @URLParameter(\.id) var id
 
-    @JSONValue("title") var title: String?
-    @JSONValue("completed") var completed: Bool?
-    @JSONValue("order") var order: Int?
+//    @JSONValue("title") var title: String?
+//    @JSONValue("completed") var completed: Bool?
+//    @JSONValue("order") var order: Int?
 
     @EnvironmentObject var database: Database
 
@@ -91,15 +91,15 @@ struct EditTodo: Responder {
         guard let index = database.todos.firstIndex(where: { $0.id.uuidString == id }) else {
             throw NoRouteFound()
         }
-        if let newTitle = title {
-            database.todos[index].title = newTitle
-        }
-        if let newCompleted = completed {
-            database.todos[index].completed = newCompleted
-        }
-        if let newOrder = order {
-            database.todos[index].order = newOrder
-        }
+//        if let newTitle = title {
+//            database.todos[index].title = newTitle
+//        }
+//        if let newCompleted = completed {
+//            database.todos[index].completed = newCompleted
+//        }
+//        if let newOrder = order {
+//            database.todos[index].order = newOrder
+//        }
         return JSON(database.todos[index]).allowCORS()
     }
 }

@@ -104,11 +104,17 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 print("request: \(requestContext.header)")
 
-                Thread.current.threadDictionary[CurrentRequestKey] = requestContext
-
                 let route = routeType.init()
 
-                if let errors = Thread.current.threadDictionary[RequestErrorsKey] as? [Error], !errors.isEmpty {
+                var errors: [Error] = []
+
+                let m = Mirror(reflecting: route)
+                for (_, child) in m.children {
+                    guard let prop = child as? PropertyWrapper else { continue }
+                    prop.update(requestContext, errors: &errors)
+                }
+
+                if !errors.isEmpty {
 
                     let reportables = errors.compactMap({ $0 as? ReportableError })
                     throw BasicError(statusCode: reportables.first!.statusCode, message: reportables.map({ $0.message }).joined(separator: "\n"))
