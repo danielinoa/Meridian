@@ -110,8 +110,9 @@ final class HTTPHandler: ChannelInboundHandler {
 
                 let m = Mirror(reflecting: route)
                 for (_, child) in m.children {
-                    guard let prop = child as? PropertyWrapper else { continue }
-                    prop.update(requestContext, errors: &errors)
+                    if let prop = child as? PropertyWrapper {
+                        prop.update(requestContext, errors: &errors)
+                    }
                 }
 
                 if !errors.isEmpty {
