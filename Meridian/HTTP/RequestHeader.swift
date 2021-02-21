@@ -16,7 +16,10 @@ public struct RequestHeader: CustomStringConvertible {
     public init(method: HTTPMethod, uri: String, headers: [(String, String)]) {
         self.method = method
         self.headers = Headers(storage: headers)
-        self.urlComponents = URLComponents(string: uri)!
+        guard let comps = URLComponents(string: uri) else {
+            fatalError("\"\(uri)\" not a valid url, can't parse into components")
+        }
+        self.urlComponents = comps
     }
 
     internal(set) public var path: String {
